@@ -36,6 +36,13 @@ export class PostsService{
     return this.postsUpdated.asObservable();
   }
 
+  //to get one post in the case that we are in edit mode for a post
+  getPost(id: string){
+    return {...this.posts
+      //see if id from database matches the id that we are passing in
+      .find( p => p.id ===id )};
+  }
+
     //adds post
   addPosts(title: string, content: string){
     const post: Post = {id: null, title: title, content: content};
@@ -66,5 +73,14 @@ export class PostsService{
       });
       //return boolean to confirm
       return true;
+  }
+
+  //update post
+  updatePost(id: string, title: string, content: string){
+    const post: Post = { id: id, title: title, content: content};
+    this.http.put('http://localhost:3000/api/posts/' + id, post)
+    //subscribe to obervable
+    .subscribe( response => console.log(response));
+    return true;
   }
 }
