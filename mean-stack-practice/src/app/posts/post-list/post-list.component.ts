@@ -16,15 +16,30 @@ export class PostListComponent implements OnInit, OnDestroy{
   //   {title: 'Third Post', content: 'This is the third post\'s content.'},
   // ]
   posts: Post[] = [];
+  isLoading = false;
   private postsSub: Subscription;
 
   constructor(public postsService: PostsService) {}
 
   ngOnInit() {
+    this.isLoading = true;
     this.postsService.getPosts();
     this.postsSub = this.postsService.getPostUpdateListener().subscribe((posts: Post[]) => {
+      this.isLoading = false;
       this.posts = posts;
     });
+  }
+  //delets posts based off id
+  onDelete(postId: string){
+    var confirmDelete = confirm("Are you sure you want to delete this post? This cannot be undone.");
+    if (confirmDelete == true){
+      var postDeleted = this.postsService.deletePost(postId);
+      if (postDeleted == true) {
+        alert("Post has been deleted!");
+      }
+    } else {
+      return;
+    }
   }
 
   ngOnDestroy(){
