@@ -4,13 +4,14 @@ import { HttpClient } from '@angular/common/http'
 import { map } from 'rxjs/operators';
 
 import { Post } from './post.model';
+import { Router } from '@angular/router';
 
 @Injectable({providedIn: 'root'})
 export class PostsService{
   private posts: Post[] = [];
   private postsUpdated = new Subject<Post[]>();
 
-  constructor(private http: HttpClient) {};
+  constructor(private http: HttpClient, private router: Router) {};
 
   getPosts(){
     this.http.get<{message: string, posts: any }>('http://localhost:3000/api/posts')
@@ -38,9 +39,8 @@ export class PostsService{
 
   //to get one post in the case that we are in edit mode for a post
   getPost(id: string){
-    return {...this.posts
-      //see if id from database matches the id that we are passing in
-      .find( p => p.id ===id )};
+    //returned this way because it is asynchronous
+    return this.http.get<{ _id: string, title: string, content: string }>('http://localhost:3000/api/posts/' + id);
   }
 
     //adds post
@@ -57,6 +57,7 @@ export class PostsService{
       this.posts.push(post);
       //informs whole app of update
       this.postsUpdated.next([...this.posts]);
+      this.navigateToHomePage();
     });
   }
 
@@ -80,7 +81,23 @@ export class PostsService{
     const post: Post = { id: id, title: title, content: content};
     this.http.put('http://localhost:3000/api/posts/' + id, post)
     //subscribe to obervable
-    .subscribe( response => console.log(response));
+    .subscribe( response => {
+      //create updated post constant
+      const updatedPosts = [...this.posts];
+      //search for old post version by id and match to passed in id
+      const oldPostIndex = updatedPosts.findIndex(p => p.id == post.id);
+      //replace index of found post to the updated post
+      updatedPosts[oldPostIndex] = post;
+      //set array of posts equal to the updated posts array
+      this.posts = updatedPosts;
+      //tell app about updated posts array
+      this.postsUpdated.next([...this.posts]);
+      this.navigateToHomePage();
+    });
     return true;
+  }
+
+  navigateToHomePage(){
+    this.router.navigate(["/"]);
   }
 }

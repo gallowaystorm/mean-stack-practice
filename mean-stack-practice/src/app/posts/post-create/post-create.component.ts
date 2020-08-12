@@ -19,6 +19,7 @@ export class PostCreateComponent implements OnInit {
   private mode = 'create';
   private postId: string;
   public post: Post;
+  isLoading = false;
 
   constructor(public postsService: PostsService, public route: ActivatedRoute){}
 
@@ -32,8 +33,17 @@ export class PostCreateComponent implements OnInit {
         this.mode = 'edit';
         //sets postId in the path equal to postId variable
         this.postId = paramMap.get('postId');
+        //spinner on load
+        this.isLoading = true;
         //call overloaded getPost function that finds post in database that matches id
-        this.post = this.postsService.getPost(this.postId);
+        this.postsService.getPost(this.postId)
+          //subscribe to observable
+          .subscribe(postData => {
+            //stop spinner
+            this.isLoading = false;
+            this.post = {id: postData._id, title: postData.title, content: postData.content};
+          })
+        ;
       } else {
         this.mode = 'create';
         this.postId = null;
@@ -45,7 +55,7 @@ export class PostCreateComponent implements OnInit {
     if (form.invalid){
       return
     }
-
+    this.isLoading = true;
     if (this.mode === 'create'){
       this.postsService.addPosts(form.value.title, form.value.content);
     } else {
