@@ -53,9 +53,9 @@ export class PostCreateComponent implements OnInit {
           .subscribe(postData => {
             //stop spinner
             this.isLoading = false;
-            this.post = {id: postData._id, title: postData.title, content: postData.content};
+            this.post = {id: postData._id, title: postData.title, content: postData.content, imagePath: postData.imagePath};
             //overite default form value on init
-            this.form.setValue({'title': this.post.title, 'content': this.post.content});
+            this.form.setValue({'title': this.post.title, 'content': this.post.content, 'image': this.post.imagePath});
           });
       } else {
         this.mode = 'create';
@@ -86,11 +86,11 @@ export class PostCreateComponent implements OnInit {
     }
     this.isLoading = true;
     if (this.mode === 'create'){
-      this.postsService.addPosts(this.form.value.title, this.form.value.content);
+      this.postsService.addPosts(this.form.value.title, this.form.value.content, this.form.value.image);
     } else {
       var confirmUpdate = confirm("Are you sure you want to update this post?");
       if (confirmUpdate == true){
-        var postUpdated = this.postsService.updatePost(this.postId, this.form.value.title, this.form.value.content);
+        var postUpdated = this.postsService.updatePost(this.postId, this.form.value.title, this.form.value.content, this.form.value.image);
         if (postUpdated == true) {
           alert("Post has been updated!");
         }

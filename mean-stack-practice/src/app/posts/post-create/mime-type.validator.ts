@@ -1,8 +1,12 @@
 import { AbstractControl } from '@angular/forms';
-import { Observable, Observer } from 'rxjs';
+import { Observable, Observer, of } from 'rxjs';
 
 //validates mime type of images uploads (promise and Observable are return types)
 export const mimeType = (control: AbstractControl): Promise<{ [key: string]: any }> | Observable< { [key: string]: any } > => {
+  //add check to see if string or not for editing mode or create mode
+  if (typeof(control.value) === 'string') {
+    return of(null);
+  }
   //extract file
   const file = control.value as File;
   const fileReader = new FileReader();
