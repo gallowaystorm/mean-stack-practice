@@ -104,7 +104,7 @@ export class PostsService{
       //search for old post version by id and match to passed in id
       const oldPostIndex = updatedPosts.findIndex(p => p.id === id);
       //replace index of found post to the updated post
-      const post: Post = {id: id, title: title, content: content, imagePath: response.imagePath};
+      const post: Post = {id: id, title: title, content: content, imagePath: ""};
       updatedPosts[oldPostIndex] = post;
       //set array of posts equal to the updated posts array
       this.posts = updatedPosts;
