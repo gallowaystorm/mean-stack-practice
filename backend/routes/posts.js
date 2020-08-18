@@ -71,8 +71,10 @@ router.put('/:id', multer({storage: storage}).single('image'), (req, res, next) 
     const post = new Post ({
         _id: req.body.id,
         title: req.body.title,
-        content: req.body.content
-    })
+        content: req.body.content,
+        imagePath: imagePath
+    });
+    console.log(post);
     //update post based off id passed in through browser
     Post.updateOne( {_id: req.params.id}, post)
     //if post is successfully updated
