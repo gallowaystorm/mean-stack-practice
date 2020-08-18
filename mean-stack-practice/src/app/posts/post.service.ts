@@ -86,7 +86,8 @@ export class PostsService{
     let postData: Post | FormData;
     if(typeof(image) === 'object') {
       //create new form data object
-      const postData = new FormData();
+      postData = new FormData();
+      postData.append('id', id);
       postData.append('title', title);
       postData.append('content', content);
       //pass in title as well to help name the image
@@ -103,7 +104,7 @@ export class PostsService{
       //search for old post version by id and match to passed in id
       const oldPostIndex = updatedPosts.findIndex(p => p.id === id);
       //replace index of found post to the updated post
-      const post: Post = {id: id, title: title, content: content, imagePath: ""};
+      const post: Post = {id: id, title: title, content: content, imagePath: response.imagePath};
       updatedPosts[oldPostIndex] = post;
       //set array of posts equal to the updated posts array
       this.posts = updatedPosts;
