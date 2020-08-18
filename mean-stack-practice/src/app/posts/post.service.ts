@@ -5,6 +5,7 @@ import { map } from 'rxjs/operators';
 
 import { Post } from './post.model';
 import { Router } from '@angular/router';
+// import { networkInterfaces } from 'os';
 
 @Injectable({providedIn: 'root'})
 export class PostsService{
@@ -22,7 +23,8 @@ export class PostsService{
         return {
           title: post.title,
           content: post.content,
-          id: post._id
+          id: post._id,
+          imagePath: post.imagePath
         }
       });
     })))
@@ -40,19 +42,21 @@ export class PostsService{
   //to get one post in the case that we are in edit mode for a post
   getPost(id: string){
     //returned this way because it is asynchronous
-    return this.http.get<{ _id: string, title: string, content: string }>('http://localhost:3000/api/posts/' + id);
+    return this.http.get<{ _id: string, title: string, content: string, imagePath: string }>('http://localhost:3000/api/posts/' + id);
   }
 
     //adds post
-  addPosts(title: string, content: string){
-    const post: Post = {id: null, title: title, content: content};
+  addPosts(title: string, content: string, image: File){
+    const postData = new FormData();
+    postData.append('title', title);
+    postData.append('content', content);
+    //pass in title as well to help name the image
+    postData.append('image', image, title);
     this.http
-    .post<{message: string, postId: string}>('http://localhost:3000/api/posts', post)
+    .post<{message: string, post: Post}>('http://localhost:3000/api/posts', postData)
     .subscribe( (responseData) => {
-      //store postId from the result of saving to database
-      const id = responseData.postId;
-      //update const post above with id
-      post.id = id;
+      //store post
+      const post: Post = {id: responseData.post.id, title: title, content: content, imagePath: responseData.post.imagePath};
       //push post to posts array
       this.posts.push(post);
       //informs whole app of update
@@ -77,16 +81,30 @@ export class PostsService{
   }
 
   //update post
-  updatePost(id: string, title: string, content: string){
-    const post: Post = { id: id, title: title, content: content};
-    this.http.put('http://localhost:3000/api/posts/' + id, post)
+  updatePost(id: string, title: string, content: string, image: File | string){
+    //check what imgage type is object for new post or string for image path if editing
+    let postData: Post | FormData;
+    if(typeof(image) === 'object') {
+      //create new form data object
+      postData = new FormData();
+      postData.append('id', id);
+      postData.append('title', title);
+      postData.append('content', content);
+      //pass in title as well to help name the image
+      postData.append('image', image, title);
+    } else {
+      //create new post data
+      const postData: Post = {id: id, title: title, content: content, imagePath: image}
+    }
+    this.http.put('http://localhost:3000/api/posts/' + id, postData)
     //subscribe to obervable
     .subscribe( response => {
       //create updated post constant
       const updatedPosts = [...this.posts];
       //search for old post version by id and match to passed in id
-      const oldPostIndex = updatedPosts.findIndex(p => p.id == post.id);
+      const oldPostIndex = updatedPosts.findIndex(p => p.id === id);
       //replace index of found post to the updated post
+      const post: Post = {id: id, title: title, content: content, imagePath: response.imagePath};
       updatedPosts[oldPostIndex] = post;
       //set array of posts equal to the updated posts array
       this.posts = updatedPosts;

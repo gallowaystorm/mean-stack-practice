@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
-import { NgForm } from '@angular/forms';
+import { FormGroup, FormControl, Validators } from '@angular/forms';
 
 import { Post } from '../post.model'
 import { PostsService } from '../post.service';
 import { ActivatedRoute, ParamMap } from '@angular/router';
+import { mimeType } from './mime-type.validator';
 
 
 @Component({
@@ -20,10 +21,21 @@ export class PostCreateComponent implements OnInit {
   private postId: string;
   public post: Post;
   isLoading = false;
+  //for reactive form of forms (lol)
+  form: FormGroup;
+  //for image preview convert
+  imagePreview: string;
 
   constructor(public postsService: PostsService, public route: ActivatedRoute){}
 
   ngOnInit() {
+    //form mappping
+    this.form = new FormGroup({
+      'title': new FormControl(null, {validators: [Validators.required, Validators.minLength(3)]}),
+      'content': new FormControl(null, {validators: [Validators.required]}),
+      //add mimeType as AsyncValidator
+      'image': new FormControl(null, {validators: [Validators.required], asyncValidators: [mimeType]})
+    });
     //pulls the path that you are at to determine between /create and /edit/:postID
     this.route.paramMap
     //subscribes to observable
@@ -41,9 +53,10 @@ export class PostCreateComponent implements OnInit {
           .subscribe(postData => {
             //stop spinner
             this.isLoading = false;
-            this.post = {id: postData._id, title: postData.title, content: postData.content};
-          })
-        ;
+            this.post = {id: postData._id, title: postData.title, content: postData.content, imagePath: postData.imagePath};
+            //overite default form value on init
+            this.form.setValue({'title': this.post.title, 'content': this.post.content, 'image': this.post.imagePath});
+          });
       } else {
         this.mode = 'create';
         this.postId = null;
@@ -51,17 +64,33 @@ export class PostCreateComponent implements OnInit {
     });
   }
 
-  onSavePost(form: NgForm){
-    if (form.invalid){
+  onImagePicked(event: Event){
+    //access file passed in
+    const file = (event.target as HTMLInputElement).files[0];
+    //target single control on form
+    this.form.patchValue({image: file});
+    //get access to image and update value and validate it
+    this.form.get('image').updateValueAndValidity();
+    //convert image to data url
+    const reader = new FileReader();
+    //executes when done loading
+    reader.onload = () => {
+      this.imagePreview = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  onSavePost(){
+    if (this.form.invalid){
       return
     }
     this.isLoading = true;
     if (this.mode === 'create'){
-      this.postsService.addPosts(form.value.title, form.value.content);
+      this.postsService.addPosts(this.form.value.title, this.form.value.content, this.form.value.image);
     } else {
       var confirmUpdate = confirm("Are you sure you want to update this post?");
       if (confirmUpdate == true){
-        var postUpdated = this.postsService.updatePost(this.postId, form.value.title, form.value.content);
+        var postUpdated = this.postsService.updatePost(this.postId, this.form.value.title, this.form.value.content, this.form.value.image);
         if (postUpdated == true) {
           alert("Post has been updated!");
         }
@@ -69,6 +98,6 @@ export class PostCreateComponent implements OnInit {
         return;
       }
     }
-    form.resetForm();
+    this.form.reset();
   }
 }
