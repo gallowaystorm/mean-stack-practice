@@ -10,28 +10,32 @@ import { Router } from '@angular/router';
 @Injectable({providedIn: 'root'})
 export class PostsService{
   private posts: Post[] = [];
-  private postsUpdated = new Subject<Post[]>();
+  private postsUpdated = new Subject<{ posts: Post[], postCount: number}>();
 
   constructor(private http: HttpClient, private router: Router) {};
 
-  getPosts(){
-    this.http.get<{message: string, posts: any }>('http://localhost:3000/api/posts')
+  getPosts(postsPerPage: number, currentPage: number){
+    //for paginator
+      //using backticks for query params
+    const queryParams = `?pagesize=${postsPerPage}&page=${currentPage}`
+    this.http.get<{message: string, posts: any, maxPosts: number }>('http://localhost:3000/api/posts' + queryParams)
     //to change id to _id
     .pipe(map((postData => {
       //replace every post with...
-      return postData.posts.map(post => {
+      return { posts: postData.posts.map(post => {
         return {
           title: post.title,
           content: post.content,
           id: post._id,
           imagePath: post.imagePath
-        }
-      });
+        };
+      }), maxPosts: postData.maxPosts
+    };
     })))
     //subscribe to observable with remapped posts
-    .subscribe( (transformedPosts) => {
-      this.posts = transformedPosts;
-      this.postsUpdated.next([...this.posts]);
+    .subscribe( (transformedPostData) => {
+      this.posts = transformedPostData.posts;
+      this.postsUpdated.next( { posts: [...this.posts], postCount:  transformedPostData.maxPosts } );
     });
   }
 
@@ -55,29 +59,13 @@ export class PostsService{
     this.http
     .post<{message: string, post: Post}>('http://localhost:3000/api/posts', postData)
     .subscribe( (responseData) => {
-      //store post
-      const post: Post = {id: responseData.post.id, title: title, content: content, imagePath: responseData.post.imagePath};
-      //push post to posts array
-      this.posts.push(post);
-      //informs whole app of update
-      this.postsUpdated.next([...this.posts]);
       this.navigateToHomePage();
     });
   }
 
   //deletes post
   deletePost(postId: string){
-    this.http.delete('http://localhost:3000/api/posts/' + postId)
-      .subscribe( () => {
-        //update post array on frontend by keeping ones where it is not equal and deleteing if it is equal
-        const updatedPosts = this.posts.filter(post => post.id !== postId);
-        //makes the array posts equal to what has been filtered
-        this.posts = updatedPosts;
-        //informs whole app of update
-        this.postsUpdated.next([...this.posts]);
-      });
-      //return boolean to confirm
-      return true;
+    return this.http.delete('http://localhost:3000/api/posts/' + postId);
   }
 
   //update post
@@ -99,17 +87,6 @@ export class PostsService{
     this.http.put('http://localhost:3000/api/posts/' + id, postData)
     //subscribe to obervable
     .subscribe( response => {
-      //create updated post constant
-      const updatedPosts = [...this.posts];
-      //search for old post version by id and match to passed in id
-      const oldPostIndex = updatedPosts.findIndex(p => p.id === id);
-      //replace index of found post to the updated post
-      const post: Post = {id: id, title: title, content: content, imagePath: ""};
-      updatedPosts[oldPostIndex] = post;
-      //set array of posts equal to the updated posts array
-      this.posts = updatedPosts;
-      //tell app about updated posts array
-      this.postsUpdated.next([...this.posts]);
       this.navigateToHomePage();
     });
     return true;
