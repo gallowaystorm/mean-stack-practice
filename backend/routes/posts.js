@@ -88,15 +88,39 @@ router.put('/:id', multer({storage: storage}).single('image'), (req, res, next) 
 //get posts
 
 router.get('', (req, res, next) => {
-    Post.find()
+    //for paginator
+        //the plus in front of variables converts to type numbers beacause they are stings comming from the url
+    const pageSize = +req.query.pagesize;
+    const currentPage = +req.query.page;
+    let fetchedPosts;
+    //postQuery not executed until we call then()
+    const postQuery = Post.find();
+    if (pageSize && currentPage) {
+        //to find select posts
+        postQuery
+        //skip does not find all posts and skips the first given paramter posts
+            //this skips for example page 2 with 10 items each so the query finds pagesize(10) * currentPage(3) - 1
+        .skip(pageSize * (currentPage - 1))
+        //limits the amount of documents returned
+        .limit(pageSize);
+    }
+    //to find all posts in database
+    postQuery.find()
         //looks at documents in datatbase
         .then(documents => {
+            //to store amount for fetched posts and allow in next then() statement
+            fetchedPosts = documents;
+            //for amount of items
+            return Post.count();
+            //chained then() functions to finally send posts
+        }).then(count => {
             res.status(200).json({
-                message: 'Posts fetched successfully',
-                posts: documents
+                message: "Posts fetched successfully!",
+                posts: fetchedPosts,
+                maxPosts: count
+            });
         });
     });
-});
 
 //get single post from server
 router.get('/:id', (req, res, next) => {
