@@ -1,6 +1,7 @@
 const express = require('express');
 const Post = require('../models/post');
 const multer = require('multer');
+const checkAuth = require('../middleware/check-auth');
 
 const router = express.Router();
 
@@ -35,7 +36,8 @@ const storage = multer.diskStorage( {
 
 //create posts
     //multer will store in storage and expects a single file with the propery "image"
-router.post('', multer({storage: storage}).single('image'),(req, res, next) => {
+    // checkAuth is to verify token
+router.post('', checkAuth, multer({storage: storage}).single('image'),(req, res, next) => {
     //get image url
     const url = req.protocol + '://' + req.get('host');
     const post = new Post({ 
@@ -59,7 +61,8 @@ router.post('', multer({storage: storage}).single('image'),(req, res, next) => {
 });
 
 //update post
-router.put('/:id', multer({storage: storage}).single('image'), (req, res, next) => {
+//middleware for images
+router.put('/:id', checkAuth, multer({storage: storage}).single('image'), (req, res, next) => {
     //check if string or req already has the path
     let imagePath = req.body.imagePath;
     if (req.file) {
@@ -136,7 +139,7 @@ router.get('/:id', (req, res, next) => {
 
 //delete posts
 
-router.delete('/:id', (req, res, next) => {
+router.delete('/:id', checkAuth, (req, res, next) => {
     //params pulls id from url
     Post.deleteOne( {_id: req.params.id})
     //to get result

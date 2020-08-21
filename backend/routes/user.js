@@ -1,6 +1,7 @@
 const express = require('express');
 const User = require('../models/user')
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 const router = express.Router();
 
@@ -14,19 +15,60 @@ router.post('/signup', (req, res, next) => {
         });
         //save to database
         user.save()
-        .then(result => {
-            res.status(201).json({
-                message: 'User was created!',
-                result: result
+            .then(result => {
+                res.status(201).json({
+                    message: 'User was created!',
+                    result: result
+                });
+            })
+            //for error catching
+            .catch(err => {
+                res.status(500).json({
+                    err: err
+                });
             });
-        })
-        //for error catching
-        .catch(err => {
-            res.status(500).json({
-                err: err
-            });
-        });
     });
+});
+
+//for logins
+router.post('/login', (req, res, next) => {
+    //validate credentials are correct
+    User.findOne({ email: req.body.email })
+        .then(user => {
+            //check if user exists
+            if (!user) {
+                return res.status(401).json({
+                    message: "Auth not successful!"
+                });
+            }
+            //so user can be used anywhere
+            fetchedUser = user;
+            //now check password if user exists
+                //compare input to encrypted value
+            return bcrypt.compare(req.body.password, user.password)
+                .then(result => {
+                    //check if result is true (password matches)
+                    if (!result) {
+                        return res.status(401).json({
+                            message: "Auth not successful!"
+                        });
+                    }
+                    //if password exists we make a JSON web token (using jsonwebtoken package)
+                        //THE SECRET SHOULD BE LONGER!!!!!!
+                    const token = jwt.sign( {email: fetchedUser.email, userId: fetchedUser._id }, 'secret_this_should_be_longer', { expiresIn: '1h'});
+                    res.status(200).json({
+                        token: token,
+                        message: 'Authentication scuccessful!'
+                    })
+                })
+                //catch for errors
+                .catch(err => {
+                    console.log(err);
+                    return res.status(401).json({
+                        message: "Auth not successful!"
+                    });
+                });
+        });
 });
 
 module.exports = router;
