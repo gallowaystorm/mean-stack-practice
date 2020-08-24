@@ -24,7 +24,8 @@ router.post('/signup', (req, res, next) => {
             //for error catching
             .catch(err => {
                 res.status(500).json({
-                    err: err
+                    err: err,
+                    message: "Error reaching Rest API for creating user"
                 });
             });
     });
