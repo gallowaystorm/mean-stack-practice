@@ -4,6 +4,7 @@ import { Subscription } from 'rxjs';
 import { Post } from '../post.model'
 import { PostsService } from '../post.service';
 import { PageEvent } from '@angular/material/paginator';
+import { AuthService } from 'src/app/auth/auth.service';
 
 @Component ({
   selector: 'app-post-list',
@@ -20,7 +21,12 @@ export class PostListComponent implements OnInit, OnDestroy{
   pageSizeOptions = [1, 2, 5, 10];
   currentPage = 1;
 
-  constructor(public postsService: PostsService) {}
+  //for authentication status
+  userIsAuthenticated = false;
+  //to subscribe to observable made in auth-service.ts
+  private authListenerSubscription: Subscription
+
+  constructor(public postsService: PostsService, private authService: AuthService) {}
 
   ngOnInit() {
     this.isLoading = true;
@@ -32,7 +38,16 @@ export class PostListComponent implements OnInit, OnDestroy{
       this.totalPosts = postData.postCount;
       this.posts = postData.posts;
     });
+    //set status of athentication to update after login
+    this.userIsAuthenticated = this.authService.getIsAuth();
+    //subscribe to listener for status of auth
+    this.authListenerSubscription = this.authService.getAuthStatusListener()
+      .subscribe( isAuthenticated  => {
+        //set based off result of above call to authService
+        this.userIsAuthenticated = isAuthenticated;
+      });
   }
+
   //delets posts based off id
   onDelete(postId: string){
     var confirmDelete = confirm("Are you sure you want to delete this post? This cannot be undone.");
@@ -59,6 +74,8 @@ export class PostListComponent implements OnInit, OnDestroy{
   }
 
   ngOnDestroy(){
-    this.postsSub.unsubscribe;
+    this.postsSub.unsubscribe();
+    //unsubscribe to listener
+    this.authListenerSubscription.unsubscribe();
   }
 }

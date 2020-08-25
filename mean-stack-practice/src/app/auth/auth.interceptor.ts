@@ -20,7 +20,6 @@ export class AuthInterceptor implements HttpInterceptor {
         //bearer is on the front of all tokens and headers (see check-auth.js for a comment explaining)
       headers: req.headers.set("Authorization", "Bearer " + authToken)
     });
-    console.log(authRequest);
     return next.handle(authRequest);
   };
 }

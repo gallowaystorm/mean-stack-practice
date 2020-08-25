@@ -59,6 +59,8 @@ router.post('/login', (req, res, next) => {
                     const token = jwt.sign( {email: fetchedUser.email, userId: fetchedUser._id }, 'secret_this_should_be_longer', { expiresIn: '1h'});
                     res.status(200).json({
                         token: token,
+                        //in seconds
+                        expiresIn: 3600,
                         message: 'Authentication scuccessful!'
                     })
                 })
