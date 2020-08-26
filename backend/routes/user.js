@@ -61,7 +61,8 @@ router.post('/login', (req, res, next) => {
                         token: token,
                         //in seconds
                         expiresIn: 3600,
-                        message: 'Authentication scuccessful!'
+                        message: 'Authentication scuccessful!',
+                        userId: fetchedUser._id
                     })
                 })
                 //catch for errors

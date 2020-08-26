@@ -43,18 +43,18 @@ router.post('', checkAuth, multer({storage: storage}).single('image'),(req, res,
     const post = new Post({ 
         title: req.body.title,
         content: req.body.content,
-        imagePath: url + '/images/' + req.file.filename
+        imagePath: url + '/images/' + req.file.filename,
+        //fetch token to decode and get user id from the middleware checkAuth
+        creator: req.userData.userId
     });
     //saves to database and get result back of save
-    post.save().then(result => {
+    post.save().then(createdPost => {
         //sends status and then sends back a message and the id of post that was saved
         res.status(201).json({
             message: 'Post added successfully',
             post: {
-                id: result._id,
-                title: result.title,
-                content: result.content,
-                imagePath: result.imagePath
+                ...createdPost,
+                id: createdPost._id
             }
         });
     });
@@ -79,16 +79,21 @@ router.put('/:id', checkAuth, multer({storage: storage}).single('image'), (req, 
     });
     console.log(post);
     //update post based off id passed in through browser
-    Post.updateOne( {_id: req.params.id}, post)
-    //if post is successfully updated
-    .then( result => {
-        console.log(result);
-        res.status(200).json({message: 'Update Successful'});
-    });
+    //creator checks to see if the id of one updating matches the one creating
+    Post.updateOne( {_id: req.params.id, creator: req.userData.userId}, post)
+        //if post is successfully updated
+        .then( result => {
+            //for error catching
+            if (result.nModified > 0){
+                res.status(200).json({message: 'Update Successful'});
+            } else {
+                res.status(401).json({message: 'Not Authroized!'});
+            }
+        });  
 });
 
 
-//get posts
+//get all posts
 
 router.get('', (req, res, next) => {
     //for paginator
@@ -141,11 +146,15 @@ router.get('/:id', (req, res, next) => {
 
 router.delete('/:id', checkAuth, (req, res, next) => {
     //params pulls id from url
-    Post.deleteOne( {_id: req.params.id})
+    Post.deleteOne( {_id: req.params.id, creator: req.userData.userId })
     //to get result
     .then(result => {
-        console.log(result);
-        res.status(200).json({message: "Post deleted!"});
+        //for error catching
+        if (result.n > 0){
+            res.status(200).json({message: 'Deletion Successful'});
+        } else {
+            res.status(401).json({message: 'Not Authroized!'});
+        }
     });
 });
 

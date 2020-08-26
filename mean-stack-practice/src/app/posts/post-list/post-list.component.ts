@@ -23,6 +23,8 @@ export class PostListComponent implements OnInit, OnDestroy{
 
   //for authentication status
   userIsAuthenticated = false;
+  //for user id authnetication on posts
+  userId: string;
   //to subscribe to observable made in auth-service.ts
   private authListenerSubscription: Subscription
 
@@ -32,6 +34,7 @@ export class PostListComponent implements OnInit, OnDestroy{
     this.isLoading = true;
     //using 1 so that we start on page one on init
     this.postsService.getPosts(this.postsPerPage, this.currentPage);
+    this.userId = this.authService.getUserId();
     this.postsSub = this.postsService.getPostUpdateListener().subscribe((postData: { posts: Post[]; postCount: number }) => {
       this.isLoading = false;
       //to set total posts on paginator
@@ -45,6 +48,8 @@ export class PostListComponent implements OnInit, OnDestroy{
       .subscribe( isAuthenticated  => {
         //set based off result of above call to authService
         this.userIsAuthenticated = isAuthenticated;
+        //in case update happens
+        this.userId = this.authService.getUserId();
       });
   }
 

@@ -28,7 +28,8 @@ export class PostsService{
           title: post.title,
           content: post.content,
           id: post._id,
-          imagePath: post.imagePath
+          imagePath: post.imagePath,
+          creator: post.creator
         };
       }), maxPosts: postData.maxPosts
     };
@@ -83,7 +84,7 @@ export class PostsService{
       postData.append('image', image, title);
     } else {
       //create new post data
-      const postData: Post = {id: id, title: title, content: content, imagePath: image}
+      postData = {id: id, title: title, content: content, imagePath: image};
     }
     this.http.put('http://localhost:3000/api/posts/' + id, postData)
     //subscribe to obervable
