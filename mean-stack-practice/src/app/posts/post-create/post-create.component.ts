@@ -53,7 +53,7 @@ export class PostCreateComponent implements OnInit {
           .subscribe(postData => {
             //stop spinner
             this.isLoading = false;
-            this.post = {id: postData._id, title: postData.title, content: postData.content, imagePath: postData.imagePath};
+            this.post = {id: postData._id, title: postData.title, content: postData.content, imagePath: postData.imagePath, creator: postData.creator};
             //overite default form value on init
             this.form.setValue({'title': this.post.title, 'content': this.post.content, 'image': this.post.imagePath});
           });
