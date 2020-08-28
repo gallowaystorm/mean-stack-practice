@@ -62,7 +62,7 @@ export class PostsService{
     //pass in title as well to help name the image
     postData.append('image', image, title);
     this.http
-    .post<{message: string, post: Post}>('', postData)
+    .post<{message: string, post: Post}>(BAKCEND_URL, postData)
     .subscribe( (responseData) => {
       this.navigateToHomePage();
     });

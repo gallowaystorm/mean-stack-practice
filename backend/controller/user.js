@@ -55,7 +55,7 @@ exports.userLogin =  (req, res, next) => {
                     }
                     //if password exists we make a JSON web token (using jsonwebtoken package)
                         //THE SECRET SHOULD BE LONGER!!!!!!
-                    const token = jwt.sign( {email: fetchedUser.email, userId: fetchedUser._id }, 'secret_this_should_be_longer', { expiresIn: '1h'});
+                    const token = jwt.sign( {email: fetchedUser.email, userId: fetchedUser._id }, process.env.JWT_KEY, { expiresIn: '1h'});
                     res.status(200).json({
                         token: token,
                         //in seconds
