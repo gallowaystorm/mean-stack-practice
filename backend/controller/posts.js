@@ -54,7 +54,7 @@ exports.updatePost = (req, res, next) => {
         //if post is successfully updated
         .then( result => {
             //for error catching
-            if (result.nModified > 0){
+            if (result.n > 0){
                 res.status(200).json({message: 'Update Successful'});
             } else {
                 res.status(401).json({message: 'Not Authroized!'});
