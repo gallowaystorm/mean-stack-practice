@@ -12,7 +12,6 @@ import { ErrorInterceptor } from './error-interceptor';
 import { ErrorComponent } from './error/error.component';
 import { AngularMaterialModule } from './angular-material.module';
 import { PostsModule } from './posts/posts.module';
-import { AuthModule } from './auth/auth.module';
 
 @NgModule({
   declarations: [
@@ -28,7 +27,6 @@ import { AuthModule } from './auth/auth.module';
     AppRoutingModule,
     AngularMaterialModule,
     PostsModule,
-    AuthModule
   ],
   //for the auth-interceptor.ts
     //multi: true says dont overide existing interceptors, just add it as a new one
