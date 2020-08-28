@@ -5,7 +5,10 @@ import { map } from 'rxjs/operators';
 
 import { Post } from './post.model';
 import { Router } from '@angular/router';
-// import { networkInterfaces } from 'os';
+import { environment } from 'src/environments/environment';
+
+
+const BAKCEND_URL = environment.apiUrl + '/posts/';
 
 @Injectable({providedIn: 'root'})
 export class PostsService{
@@ -19,7 +22,7 @@ export class PostsService{
     //for paginator
       //using backticks for query params
     const queryParams = `?pagesize=${postsPerPage}&page=${currentPage}`
-    this.http.get<{message: string, posts: any, maxPosts: number }>('http://localhost:3000/api/posts' + queryParams)
+    this.http.get<{message: string, posts: any, maxPosts: number }>(BAKCEND_URL + queryParams)
     //to change id to _id
     .pipe(map((postData => {
       //replace every post with...
@@ -48,7 +51,7 @@ export class PostsService{
   //to get one post in the case that we are in edit mode for a post
   getPost(id: string){
     //returned this way because it is asynchronous
-    return this.http.get<{ _id: string, title: string, content: string, imagePath: string, creator: string }>('http://localhost:3000/api/posts/' + id);
+    return this.http.get<{ _id: string, title: string, content: string, imagePath: string, creator: string }>(BAKCEND_URL + id);
   }
 
     //adds post
@@ -59,7 +62,7 @@ export class PostsService{
     //pass in title as well to help name the image
     postData.append('image', image, title);
     this.http
-    .post<{message: string, post: Post}>('http://localhost:3000/api/posts', postData)
+    .post<{message: string, post: Post}>(BAKCEND_URL, postData)
     .subscribe( (responseData) => {
       this.navigateToHomePage();
     });
@@ -67,7 +70,7 @@ export class PostsService{
 
   //deletes post
   deletePost(postId: string){
-    return this.http.delete('http://localhost:3000/api/posts/' + postId);
+    return this.http.delete(BAKCEND_URL +  postId);
   }
 
   //update post
@@ -86,7 +89,7 @@ export class PostsService{
       //create new post data
       postData = {id: id, title: title, content: content, imagePath: image, creator: null};
     }
-    this.http.put('http://localhost:3000/api/posts/' + id, postData)
+    this.http.put(BAKCEND_URL + id, postData)
     //subscribe to obervable
     .subscribe( response => {
       this.navigateToHomePage();

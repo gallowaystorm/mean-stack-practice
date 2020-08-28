@@ -3,6 +3,9 @@ import { HttpClient } from '@angular/common/http';
 import { AuthData } from '../auth/auth-data.model';
 import { Subject } from 'rxjs';
 import { Router } from '@angular/router';
+import { environment } from 'src/environments/environment';
+
+const BAKCEND_URL = environment.apiUrl + '/user/'
 
 @Injectable({ providedIn: 'root' })
 export class AuthService{
@@ -40,17 +43,19 @@ export class AuthService{
   createUser(email: string, password: string){
     //creating what is in the auth throught the auth-data.model.ts file and importing it
     const authData: AuthData = {email: email, password: password};
-    this.http.post('http://localhost:3000/api/user/signup', authData)
+    this.http.post(BAKCEND_URL + 'signup', authData)
     //subscibing to it
-    .subscribe(response => {
-      console.log(response);
+    .subscribe( () => {
+      this.router.navigate(['/']);
+    }, error => {
+      this.authStatusListener.next(false);
     });
   }
 
   loginUser(email: string, password: string) {
     const authData: AuthData = {email: email, password: password};
     //the values inbetween <> are what is expected back
-    this.http.post<{ token: string, expiresIn: number, userId: string }>('http://localhost:3000/api/user/login', authData)
+    this.http.post<{ token: string, expiresIn: number, userId: string }>(BAKCEND_URL + 'login', authData)
     //subscribe to response
       .subscribe(response => {
         const token = response.token;
@@ -74,6 +79,8 @@ export class AuthService{
           //navigate to home page
           this.router.navigate(['/']);
         }
+      }, error => {
+        this.authStatusListener.next(false);
       });
   }
 
